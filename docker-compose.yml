@@ -1,0 +1,26 @@
+---
+name: apple-order-tracker
+
+services:
+  apple-order-tracker:
+    container_name: ${PROJECT_NAME}
+    image: apple-order-tracker
+    build: .
+    hostname: ${PROJECT_NAME}
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      ALLOWED_USER_ID: ${ALLOWED_USER_ID}
+      TOKEN: ${TOKEN}
+      ORDER_STATUS_URL: ${ORDER_STATUS_URL}
+    volumes:
+      - ${PROJECT_NAME}_logs:/app/logs
+
+volumes:
+  apple-order-tracker_logs:
+    name: ${PROJECT_NAME}_logs
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/logs
+      o: bind

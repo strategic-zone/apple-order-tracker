@@ -1,0 +1,16 @@
+# pyproject.toml
+[tool.poetry]
+name = "apple-order-tracker"
+version = "0.1.0"
+description = "Track Apple order status via Telegram bot by Strategic Zone"
+authors = ["Strategic Zone <ts@strat.zone>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-telegram-bot = {version = "20.6", extras = ["all"]}
+requests = "^2.31.0"
+beautifulsoup4 = "^4.12.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
