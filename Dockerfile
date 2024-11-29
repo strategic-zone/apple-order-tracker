@@ -5,7 +5,8 @@ FROM python:${IMAGE_VERSION}
 LABEL maintainer="Valeriu Stinca <ts@strat.zone>" \
       version="1.0" \
       vendor="Strategic Zone" \
-      release-date="2024-11-29"
+      release-date="2024-11-29" \
+      org.opencontainers.image.description="A Python application for tracking Apple orders via a Telegram bot."
 
 WORKDIR /app
 
