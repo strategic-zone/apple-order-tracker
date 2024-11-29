@@ -27,7 +27,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -39,6 +39,8 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ github.sha }}
           labels: |
             org.opencontainers.image.description=A Python application for tracking Apple orders.
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Make Docker image public
         run: |
@@ -46,7 +48,7 @@ jobs:
             -X PATCH \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/orgs/${{ github.repository_owner }}/packages/container/${{ github.repository }} \
+            https://api.github.com/orgs/strategic-zone/packages/container/apple-order-tracker \
             -d '{"visibility":"public"}')
           if [ "$response" -ne 200 ]; then
             echo "Failed to set package visibility. Response code: $response"

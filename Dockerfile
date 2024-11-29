@@ -12,9 +12,10 @@ WORKDIR /app
 
 COPY pyproject.toml apple_order_tracker.py ./
 RUN <<eot
-   pip install poetry
-   poetry config virtualenvs.create false
-   poetry install --only main --no-interaction --no-ansi
+  pip install --upgrade pip
+  pip install poetry
+  poetry config virtualenvs.create false
+  poetry install --only main --no-interaction --no-ansi
 eot
 
 ENTRYPOINT ["python", "/app/apple_order_tracker.py"]
