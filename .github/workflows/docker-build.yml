@@ -41,17 +41,3 @@ jobs:
             org.opencontainers.image.description=A Python application for tracking Apple orders.
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
-
-      - name: Make Docker image public
-        run: |
-          response=$(curl -s -o response.json -w "%{http_code}" \
-            -X PATCH \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/orgs/strategic-zone/packages/container/apple-order-tracker \
-            -d '{"visibility":"public"}')
-          if [ "$response" -ne 200 ]; then
-            echo "Failed to set package visibility. Response code: $response"
-            cat response.json
-            exit 1
-          fi
