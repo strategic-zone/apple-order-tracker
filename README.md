@@ -1,6 +1,6 @@
 # Apple Order Tracker Bot
 
-![Bot Demo](assets/bot_demo.png)
+![Bot Demo](assets/bot_demo.webp)
 
 Telegram bot to track Apple store order status. Get notifications when your order status changes.
 

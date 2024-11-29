@@ -4,8 +4,8 @@ name: apple-order-tracker
 services:
   apple-order-tracker:
     container_name: ${PROJECT_NAME}
-    image: apple-order-tracker
-    build: .
+    image: ghcr.io/strategic-zone/apple-order-tracker:latest
+    # build: .
     hostname: ${PROJECT_NAME}
     restart: unless-stopped
     environment:
