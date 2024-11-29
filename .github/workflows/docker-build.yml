@@ -33,6 +33,23 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:build-${{ github.run_number }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
           labels: |
             org.opencontainers.image.description=A Python application for tracking Apple orders.
+
+      - name: Make Docker image public
+        run: |
+          response=$(curl -s -o response.json -w "%{http_code}" \
+            -X PATCH \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/orgs/${{ github.repository_owner }}/packages/container/${{ github.repository }} \
+            -d '{"visibility":"public"}')
+          if [ "$response" -ne 200 ]; then
+            echo "Failed to set package visibility. Response code: $response"
+            cat response.json
+            exit 1
+          fi
