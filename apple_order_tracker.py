@@ -35,7 +35,8 @@ STATUS_EMOJIS = {
     "PROCESSING": "⚙️",
     "SHIPPING_TO_STORE": "🚚",
     "READY_FOR_PICKUP": "📦",
-    "PICKED_UP": "✅"
+    "PICKED_UP": "✅",
+    "UNDER_REVIEW": "🔍"
 }
 
 keyboard = [[KeyboardButton("Check Order Status")]]
