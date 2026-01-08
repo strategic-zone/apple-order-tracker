@@ -13,6 +13,9 @@ services:
       ORDER_STATUS_URL: ${ORDER_STATUS_URL}
     volumes:
       - ${PROJECT_NAME}_logs:/app/logs
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
 volumes:
   apple-order-tracker_logs:
