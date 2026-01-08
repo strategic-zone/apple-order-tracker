@@ -1,6 +1,4 @@
 ---
-name: apple-order-tracker
-
 services:
   apple-order-tracker:
     container_name: ${PROJECT_NAME}
