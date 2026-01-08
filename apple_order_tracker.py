@@ -6,6 +6,8 @@ import os
 import asyncio
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.error import TimedOut, NetworkError
+from telegram.request import HTTPXRequest
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -41,6 +43,17 @@ STATUS_EMOJIS = {
 
 keyboard = [[KeyboardButton("Check Order Status")]]
 reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+async def send_with_retry(send_coro_factory, *, attempts: int = 3, base_delay_seconds: float = 1.0):
+    for attempt in range(1, attempts + 1):
+        try:
+            return await send_coro_factory()
+        except (TimedOut, NetworkError) as e:
+            if attempt >= attempts:
+                raise
+            delay = base_delay_seconds * (2 ** (attempt - 1))
+            logger.warning(f"Telegram send failed ({type(e).__name__}), retrying in {delay:.1f}s (attempt {attempt}/{attempts})")
+            await asyncio.sleep(delay)
 
 async def get_order_status():
     try:
@@ -100,7 +113,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_id = update.effective_user.id
     if user_id != ALLOWED_USER_ID:
         logger.warning(f"Unauthorized message from user ID: {user_id}")
-        await update.message.reply_text("Sorry, you are not authorized to use this bot.")
+        await send_with_retry(lambda: update.message.reply_text("Sorry, you are not authorized to use this bot."))
         return
 
     if update.message.text == "Check Order Status":
@@ -109,10 +122,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         
         if current_status and possible_statuses:
             message = format_status_message(current_status, possible_statuses)
-            await update.message.reply_text(message, reply_markup=reply_markup)
+            await send_with_retry(lambda: update.message.reply_text(message, reply_markup=reply_markup))
         else:
             logger.warning("Unable to fetch order status")
-            await update.message.reply_text("Unable to fetch order status at the moment.", reply_markup=reply_markup)
+            await send_with_retry(lambda: update.message.reply_text("Unable to fetch order status at the moment.", reply_markup=reply_markup))
 
 async def periodic_status_check(context: ContextTypes.DEFAULT_TYPE):
     global last_known_status
@@ -127,19 +140,31 @@ async def periodic_status_check(context: ContextTypes.DEFAULT_TYPE):
                 message += f"Previous status: {last_known_status}\n"
                 message += f"New status: {current_status}\n\n"
                 message += format_status_message(current_status, possible_statuses)
-                await context.bot.send_message(chat_id=ALLOWED_USER_ID, text=message, reply_markup=reply_markup)
+                await send_with_retry(
+                    lambda: context.bot.send_message(chat_id=ALLOWED_USER_ID, text=message, reply_markup=reply_markup)
+                )
             last_known_status = current_status
         else:
             logger.info(f"No status change. Current status: {current_status}")
     else:
         logger.warning("Failed to fetch status during periodic check")
 
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.exception("Unhandled Telegram error: %s", context.error)
+
 def main() -> None:
     logger.info("Starting the bot")
-    application = Application.builder().token(TOKEN).build()
+    request = HTTPXRequest(
+        connect_timeout=20.0,
+        read_timeout=20.0,
+        write_timeout=20.0,
+        pool_timeout=20.0,
+    )
+    application = Application.builder().token(TOKEN).request(request).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_error_handler(error_handler)
 
     application.job_queue.run_repeating(periodic_status_check, interval=1350, first=10)
 
